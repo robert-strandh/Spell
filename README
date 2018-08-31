@@ -1,5 +1,19 @@
-SPELL
+SPELL: spellchecking library for Common Lisp.
 
-Spellchecking library for Common Lisp.
+License: BSD
 
-BSD license.
+Loading the SPELL system may initially take up to 20 seconds (on my machine) as
+an English dictionary is loaded and compiled into the resulting FASL file.
+
+For loading the full version:
+> (ql:quickload :spell)
+
+For loading the simple version:
+> (ql:quickload :spell/simple)
+
+Currently the only exported function is #'LOOKUP that accepts a string.
+
+The difference between the full and the simple version is that the simple
+version answers only "does this word occur in the English dictionary?" with
+a boolean value, while the full version returns a list of all word meanings
+associated with that string.

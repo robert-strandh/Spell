@@ -4,6 +4,9 @@
   ((%spelling :initarg :spelling :reader spelling)
    (%base :initarg :base :reader base)))
 
+(defmethod make-load-form ((object word) &optional environment)
+  (make-load-form-saving-slots object :environment environment))
+
 (defword noun (word)
   ((%number :initarg :number :reader %number)
    (%case :initarg :case :initform :nominative :reader %case)

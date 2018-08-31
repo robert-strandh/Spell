@@ -8,8 +8,14 @@
 
 (defclass node () ())
 
+(defmethod make-load-form ((object node) &optional environment)
+  (make-load-form-saving-slots object :environment environment))
+
 (defclass dictionary ()
   ((%contents :initform (make-instance 'node) :accessor contents)))
+
+(defmethod make-load-form ((object dictionary) &optional environment)
+  (make-load-form-saving-slots object :environment environment))
 
 (defmethod %lookup (string (dictionary dictionary))
   (assert (plusp (length string)))
@@ -31,7 +37,7 @@
 (defclass interior-mixin ()
   ((%children :initform '() :initarg :children :accessor children)))
 
-(defclass interior-node (interior-mixin) ())
+(defclass interior-node (interior-mixin node) ())
 
 (defmethod %%lookup (string (suffix (eql 0)) (node interior-node))
   '())
@@ -43,8 +49,8 @@
         nil
         (%%lookup string (1- suffix) child))))
 
-(defclass leaf-node (leaf-mixin) ())
-(defclass interior-leaf-node (interior-mixin leaf-mixin) ())
+(defclass leaf-node (leaf-mixin node) ())
+(defclass interior-leaf-node (interior-mixin leaf-mixin node) ())
 
 (defgeneric %insert (object string suffix dictionary))
 

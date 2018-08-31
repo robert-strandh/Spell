@@ -1,3 +1,6 @@
+(defpackage #:spell (:use :cl))
+(in-package #:spell)
+
 (defgeneric lookup (string dictionary))
 (defgeneric insert (object string dictionary))
 
@@ -14,8 +17,8 @@
 
 (defgeneric %lookup (string suffix node)
   (:method (string suffix node)
-	   (declare (ignore string suffix node))
-	   '()))
+    (declare (ignore string suffix node))
+    '()))
 
 (defclass leaf-mixin ()
   ((%entries :initform '() :initarg :entries :accessor entries)))
@@ -33,10 +36,10 @@
 
 (defmethod %lookup (string suffix (node interior-mixin))
   (let ((child (find-child (aref string (- (length string) suffix))
-			   (children node))))
+                           (children node))))
     (if (null child)
-	nil
-	(%lookup string (1- suffix) child))))
+        nil
+        (%lookup string (1- suffix) child))))
 
 (defclass leaf-node (leaf-mixin) ())
 (defclass interior-leaf-node (interior-mixin leaf-mixin) ())
@@ -64,13 +67,13 @@
 
 (defmethod %insert (object string suffix (node interior-mixin))
   (let ((child (find-child (aref string (- (length string) suffix))
-			   (children node))))
+                           (children node))))
     (when (null child)
       (setf child (make-instance 'node))
       (setf (children node)
-	    (add-child child
-		       (aref string (- (length string) suffix))
-		       (children node))))
+            (add-child child
+                       (aref string (- (length string) suffix))
+                       (children node))))
     (%insert object string (1- suffix) child)))
 
 (defmethod insert (object string (dictionary dictionary))
@@ -91,14 +94,14 @@
 
 (defmethod add-child (node char (entries vector))
   (setf (aref entries (- (char-code char) #.(char-code #\a)))
-	node))
+        node))
 
 (defparameter *word-types* (make-hash-table :test #'eq))
 
 (defmacro defword (class-name &body body)
   (let ((type (intern (symbol-name class-name) :keyword)))
     `(progn (setf (gethash ,type *word-types*) ',class-name)
-	    (defclass ,class-name ,@body))))
+            (defclass ,class-name ,@body))))
 
 (defword word ()
   ((%spelling :initarg :spelling :reader spelling)
@@ -109,7 +112,7 @@
    (%case :initarg :case :initform :nominative :reader %case)
    (%gender :initarg :gender :initform :any :reader gender)
    (%singular :initarg :singular :reader singular)))
-	  
+
 (defword proper-noun (noun) ())
 
 (defword negative-mixin ()
@@ -170,19 +173,38 @@
    (%person :initarg :person :reader person)
    (%refnumber :initform :any :initarg :refnumber :reader refnumber)))
 
-(defword demonstrative-adjective (determiner) ())  
+(defword demonstrative-adjective (determiner) ())
 
 (defword interrogative-adjective (determiner) ())
 
-(defword noun-verb-contraction (noun verb) ())  
+(defword noun-verb-contraction (noun verb) ())
 
-(defword verb-verb-contraction (verb) ())  
+(defword verb-verb-contraction (verb) ())
 
 (defparameter *english-dictionary* (make-instance 'dictionary))
 
 (defun word (&rest arguments &key type spelling &allow-other-keys)
-  (insert (apply #'make-instance
-		 (gethash type *word-types*)
-		 (progn (remf arguments :type) arguments))
-	  spelling
-	  *english-dictionary*))
+  (let ((arguments (copy-list arguments)))
+    (remf arguments :type)
+    (insert (apply #'make-instance (gethash type *word-types*) arguments)
+            spelling
+            *english-dictionary*)))
+
+(defun load-dictionary (filename)
+  (setf *english-dictionary* (make-instance 'dictionary))
+  (let ((stream (open filename)))
+    (unwind-protect
+         (let ((counter 0))
+           (do ((line (read-line stream nil stream)
+                      (read-line stream nil stream)))
+               ((eq stream line))
+             (handler-bind ((error (lambda (e)
+                                     (declare (ignore e))
+                                     (princ line))))
+               (unless (eq #\; (aref line 0))
+                 (let* ((string (concatenate 'string "(" line ")"))
+                        (args (read-from-string string)))
+                   (apply #'word :spelling args)
+                   (incf counter)))))
+           counter)
+      (close stream))))

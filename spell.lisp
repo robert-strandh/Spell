@@ -11,6 +11,8 @@
 (defmethod make-load-form ((object node) &optional environment)
   (make-load-form-saving-slots object :environment environment))
 
+(defvar *dictionary*)
+
 (defclass dictionary ()
   ((%contents :initform (make-instance 'node) :accessor contents)))
 
@@ -52,7 +54,7 @@
 (defclass leaf-node (leaf-mixin node) ())
 (defclass interior-leaf-node (interior-mixin leaf-mixin node) ())
 
-(defgeneric %insert (object string suffix dictionary))
+(defgeneric %insert (object string suffix node))
 
 (defmethod %insert (object string (suffix (eql 0)) (node leaf-mixin))
   (push object (entries node)))
@@ -87,9 +89,7 @@
 (defmethod insert (object string (dictionary dictionary))
   (%insert object string (length string) (contents dictionary)))
 
-
 (defgeneric find-child (char entries))
-(defgeneric add-child (node char entries))
 
 (defmethod find-child (char (entries list))
   (cdr (assoc char entries)))
@@ -97,16 +97,11 @@
 (defmethod find-child (char (entries vector))
   (aref entries (- (char-code char) #.(char-code #\a))))
 
+(defgeneric add-child (node char entries))
+
 (defmethod add-child (node char (entries list))
   (acons char node entries))
 
 (defmethod add-child (node char (entries vector))
   (setf (aref entries (- (char-code char) #.(char-code #\a)))
         node))
-
-(defparameter *word-types* (make-hash-table :test #'eq))
-
-(defmacro defword (class-name &body body)
-  (let ((type (intern (symbol-name class-name) :keyword)))
-    `(progn (setf (gethash ,type *word-types*) ',class-name)
-            (defclass ,class-name ,@body))))

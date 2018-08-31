@@ -1,13 +1,27 @@
 (in-package #:spell)
 
+(defparameter *word-types* (make-hash-table :test #'eq))
+
+(defmacro defword (class-name &body body)
+  (let ((type (intern (symbol-name class-name) :keyword)))
+    `(progn (setf (gethash ,type *word-types*) ',class-name)
+            (defclass ,class-name ,@body))))
+
+(defun word (&rest arguments &key type spelling &allow-other-keys)
+  (let ((arguments (copy-list arguments)))
+    (remf arguments :type)
+    (insert (apply #'make-instance (gethash type *word-types*) arguments)
+            spelling
+            *dictionary*)))
+
 (defword word ()
-  ((%spelling :initarg :spelling :reader spelling)
-   ;; (%base :initarg :base :reader base)
+  (;;(%spelling :initarg :spelling :reader spelling)
+   (%base :initarg :base :reader base)
    ))
 
-(defmethod initialize-instance :after ((object word) &key base)
-  ;; Uncomment the above slot to get full base strings inside words.
-  (declare (ignore base)))
+(defmethod initialize-instance :after ((object word) &key base spelling)
+  ;; Uncomment the above slots to get spelling and base strings inside words.
+  (declare (ignore base spelling)))
 
 (defmethod make-load-form ((object word) &optional environment)
   (make-load-form-saving-slots object :environment environment))

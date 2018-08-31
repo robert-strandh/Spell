@@ -2,7 +2,12 @@
 
 (defword word ()
   ((%spelling :initarg :spelling :reader spelling)
-   (%base :initarg :base :reader base)))
+   ;; (%base :initarg :base :reader base)
+   ))
+
+(defmethod initialize-instance :after ((object word) &key base)
+  ;; Uncomment the above slot to get full base strings inside words.
+  (declare (ignore base)))
 
 (defmethod make-load-form ((object word) &optional environment)
   (make-load-form-saving-slots object :environment environment))

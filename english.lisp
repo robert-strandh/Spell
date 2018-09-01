@@ -16,7 +16,10 @@
         (values *dictionary* counter)))))
 
 (defun lookup (word &optional (dictionary *english-dictionary*))
-  (%lookup word dictionary))
+  (let ((decapitalized (copy-seq word)))
+    (setf (aref word 0) (char-downcase (aref word 0)))
+    (or (%lookup word dictionary)
+        (%lookup decapitalized dictionary))))
 
 (defparameter *english-dictionary*
   #.(load-dictionary (asdf:system-relative-pathname :spell "english.txt")))

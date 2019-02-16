@@ -1,6 +1,7 @@
 (defpackage #:spell
   (:use #:cl)
-  (:export #:english-lookup))
+  (:export #:english-lookup
+           #:english-check-paragraph))
 (in-package #:spell)
 
 (defgeneric lookup (string dictionary))

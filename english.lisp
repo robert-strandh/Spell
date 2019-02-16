@@ -17,7 +17,7 @@
         with length = (length string)
         for word-start = (find-start string position)
         for word-end = (find-end string word-start)
-        while (/= word-start word-end length)
+        until (= word-start word-end length)
         do (setf position word-end)
         unless (english-lookup (subseq string word-start word-end))
           collect (cons word-start word-end)))
